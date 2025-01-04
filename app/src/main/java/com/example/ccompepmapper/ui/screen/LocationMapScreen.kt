@@ -162,13 +162,13 @@ fun LocationMapScreen(
                             solidCameraState.geoPoint.longitude
                         ), 50.0)
                 locationMapViewModel.addNewMapBaseAndMapLayer(
-//                    MapLayer(
-//                        upperLeftLatitude = newBorderPoints.first.latitude,
-//                        upperLeftLongitude = newBorderPoints.first.longitude,
-//                        lowerRightLatitude = newBorderPoints.second.latitude,
-//                        lowerRightLongitude = newBorderPoints.second.longitude
-//                    ),
-                    null,
+                    MapLayer(
+                        upperLeftLatitude = newBorderPoints.first.latitude,
+                        upperLeftLongitude = newBorderPoints.first.longitude,
+                        lowerRightLatitude = newBorderPoints.second.latitude,
+                        lowerRightLongitude = newBorderPoints.second.longitude
+                    ),
+//                    null,
                     MapBase(
                         mapLayerId = null,
                         name = "EP",

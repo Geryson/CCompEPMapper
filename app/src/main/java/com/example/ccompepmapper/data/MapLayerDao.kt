@@ -1,7 +1,6 @@
 package com.example.ccompepmapper.data
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -13,8 +12,8 @@ interface MapLayerDao {
     @Query("SELECT * FROM maplayer WHERE mapLayerId = :id")
     fun getMapLayerById(id: Int): Flow<MapLayer>
 
-    @Delete
-    suspend fun deleteMapLayer(mapLayer: MapLayer)
+    @Query("DELETE FROM maplayer WHERE mapLayerId = :id")
+    suspend fun deleteMapLayerById(id: Int)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertMapLayer(mapLayer: MapLayer) : Long
