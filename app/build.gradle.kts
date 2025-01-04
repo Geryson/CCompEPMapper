@@ -2,6 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.hilt.gradle)
 }
 
 android {
@@ -58,4 +61,14 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.navigation.runtime.ktx)
     implementation(libs.navigation.compose)
+    implementation(libs.osmdroid)
+    implementation(libs.osmdroid.compose)
+
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
+
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 }
