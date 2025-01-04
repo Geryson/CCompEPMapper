@@ -15,6 +15,10 @@ class EPMapperDBRepository @Inject constructor(
         return mapBaseDao.getAllMapBases()
     }
 
+    fun getMapBaseById(mapBaseId: Int): Flow<MapBase> {
+        return mapBaseDao.getMapBaseById(mapBaseId)
+    }
+
     suspend fun insertMapBase(mapBase: MapBase) {
         mapBaseDao.insertMapBase(mapBase)
     }

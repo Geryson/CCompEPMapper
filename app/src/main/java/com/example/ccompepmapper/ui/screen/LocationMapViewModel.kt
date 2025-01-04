@@ -6,6 +6,7 @@ import com.example.ccompepmapper.data.MapBase
 import com.example.ccompepmapper.repository.EPMapperDBRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,5 +17,9 @@ class LocationMapViewModel @Inject constructor(
         viewModelScope.launch(Dispatchers.IO) {
             dbRepository.insertMapBase(mapBase)
         }
+    }
+
+    fun getMapBase(mapBaseId: Int): Flow<MapBase> {
+        return dbRepository.getMapBaseById(mapBaseId)
     }
 }
