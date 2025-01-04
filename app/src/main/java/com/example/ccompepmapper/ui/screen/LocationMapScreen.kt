@@ -21,6 +21,7 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.ccompepmapper.R
 import com.example.ccompepmapper.data.MapBase
+import com.example.ccompepmapper.data.MapLayer
 import com.utsman.osmandcompose.CameraProperty
 import com.utsman.osmandcompose.CameraState
 import com.utsman.osmandcompose.DefaultMapProperties
@@ -49,6 +50,7 @@ fun LocationMapScreen(
     val initialGeoPoint = GeoPoint(47.0, 19.0)
 
     val mapBase: MapBase? by locationMapViewModel.getMapBase(mapBaseId).collectAsState(initial = null)
+    val mapLayer: MapLayer? by locationMapViewModel.getMapLayerById(mapBaseId).collectAsState(initial = null)
 
     var solidCameraState by remember {
         mutableStateOf(
@@ -74,7 +76,6 @@ fun LocationMapScreen(
     SideEffect {
         mapProperties = mapProperties
             .copy(isTilesScaledToDpi = true)
-            .copy(isEnableRotationGesture = true)
             .copy(zoomButtonVisibility = ZoomButtonVisibility.SHOW_AND_FADEOUT)
     }
 
@@ -96,19 +97,21 @@ fun LocationMapScreen(
         solidCameraState.zoom = mapBase!!.zoomLevel
 
         markerState.geoPoint = GeoPoint(mapBase!!.latitude, mapBase!!.longitude)
+    } else {
+        // Display loading indicator or placeholder
+    }
 
+    if (mapLayer != null) {
         overlay.transparency = 0.9f
         overlay.image = context.getDrawable(R.drawable.circles)?.toBitmap(1000, 1000, null)
-        val borderPoints = calculateDestinationPoints(GeoPoint(mapBase!!.latitude, mapBase!!.longitude), 50.0)
         overlay.setPosition(
-            GeoPoint(borderPoints.first.latitude, borderPoints.first.longitude),
-            GeoPoint(borderPoints.second.latitude, borderPoints.second.longitude))
+            GeoPoint(mapLayer!!.upperLeftLatitude, mapLayer!!.upperLeftLongitude),
+            GeoPoint(mapLayer!!.lowerRightLatitude, mapLayer!!.lowerRightLongitude))
 
         overlayManagerState.overlayManager.add(overlay)
     } else {
         // Display loading indicator or placeholder
     }
-
     Column {
 
         OpenStreetMap(
@@ -120,6 +123,10 @@ fun LocationMapScreen(
             onFirstLoadListener = {
                 val copyright = CopyrightOverlay(context)
                 overlayManagerState.overlayManager.add(copyright)
+            },
+            onMapClick = {
+                markerState.geoPoint = it
+                solidCameraState.geoPoint = it
             }
         ) {
             Marker(
@@ -149,7 +156,19 @@ fun LocationMapScreen(
                 Text(text = "1f")
             }
             Button(onClick = {
-                locationMapViewModel.addMapBase(
+                val newBorderPoints = calculateDestinationPoints(
+                        GeoPoint(
+                            solidCameraState.geoPoint.latitude,
+                            solidCameraState.geoPoint.longitude
+                        ), 50.0)
+                locationMapViewModel.addNewMapBaseAndMapLayer(
+//                    MapLayer(
+//                        upperLeftLatitude = newBorderPoints.first.latitude,
+//                        upperLeftLongitude = newBorderPoints.first.longitude,
+//                        lowerRightLatitude = newBorderPoints.second.latitude,
+//                        lowerRightLongitude = newBorderPoints.second.longitude
+//                    ),
+                    null,
                     MapBase(
                         mapLayerId = null,
                         name = "EP",

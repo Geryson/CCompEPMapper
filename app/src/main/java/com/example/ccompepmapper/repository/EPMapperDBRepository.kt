@@ -27,8 +27,8 @@ class EPMapperDBRepository @Inject constructor(
         return mapBaseDao.getMapLayerByMapBaseId(mapLayerId)
     }
 
-    suspend fun insertMapLayer(mapLayer: MapLayer) {
-        mapLayerDao.insertMapLayer(mapLayer)
+    suspend fun insertMapLayer(mapLayer: MapLayer) : Long {
+        return mapLayerDao.insertMapLayer(mapLayer)
     }
 
 }

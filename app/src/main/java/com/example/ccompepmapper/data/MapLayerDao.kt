@@ -17,7 +17,7 @@ interface MapLayerDao {
     suspend fun deleteMapLayer(mapLayer: MapLayer)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertMapLayer(mapLayer: MapLayer)
+    suspend fun insertMapLayer(mapLayer: MapLayer) : Long
 
     @Update
     suspend fun updateMapLayer(mapLayer: MapLayer)
