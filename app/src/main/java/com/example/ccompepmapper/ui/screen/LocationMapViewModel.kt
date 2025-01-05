@@ -24,17 +24,6 @@ class LocationMapViewModel @Inject constructor(
         return dbRepository.getMapBaseById(mapBaseId)
     }
 
-    fun addNewMapBaseAndMapLayer(mapLayer: MapLayer?, mapBase: MapBase) {
-        viewModelScope.launch(Dispatchers.IO) {
-            if (mapLayer != null) {
-                val response = dbRepository.insertMapLayer(mapLayer)
-                dbRepository.insertMapBase(mapBase.copy(mapLayerId = response.toInt()))
-            } else {
-                dbRepository.insertMapBase(mapBase)
-            }
-        }
-    }
-
     fun getMapLayerById(mapBaseId: Int): Flow<MapLayer?> {
         return dbRepository.getAllMapLayerById(mapBaseId)
     }

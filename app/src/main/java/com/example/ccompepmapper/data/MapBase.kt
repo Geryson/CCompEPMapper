@@ -11,4 +11,5 @@ data class MapBase(
     val latitude: Double,
     val longitude: Double,
     val zoomLevel: Double,
+    val destinationRadius: Double
 )

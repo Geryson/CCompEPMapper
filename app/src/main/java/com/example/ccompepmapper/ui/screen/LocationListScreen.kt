@@ -20,6 +20,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,7 @@ import com.example.ccompepmapper.ui.theme.CCompEPMapperTheme
 @Composable
 fun LocationListScreen(
     onNavigateToLocationMap: (Int) -> Unit = {},
+    onNavigateToLocationEditor: (Int) -> Unit = {},
     locationListViewModel: LocationListViewModel = hiltViewModel()
 ) {
     val mapsList by locationListViewModel.getMapBases().collectAsState(emptyList())
@@ -39,7 +41,9 @@ fun LocationListScreen(
             TopAppBar(title = { Text("Location List") })
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { /* Handle FAB click */ }) {
+            FloatingActionButton(onClick = {
+                onNavigateToLocationEditor(-1)
+            }) {
                 Icon(Icons.Filled.Add, contentDescription = "Add")
             }
         }
@@ -55,22 +59,32 @@ fun LocationListScreen(
                         onNavigateToLocationMap(mapBase.mapBaseId)
                     }
                 ) {
-                    Row(
-                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceAround,
+                    Row( modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text(text = "Name: ${mapBase.name}")
-                            Text(text = "Latitude: ${mapBase.latitude}")
-                            Text(text = "Longitude: ${mapBase.longitude}")
-                            Text(text = "Zoom Level: ${mapBase.zoomLevel}")
+                            Text(text = mapBase.name)
+                            Text(text = mapBase.destinationRadius.toString())
                         }
-                        Button(
-                            onClick = {
-                                locationListViewModel.deleteMapBase(mapBase)
-                            },
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            Text(text = "Delete")
+                        Column(modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally) {
+                            Button(
+                                onClick = {
+                                    onNavigateToLocationEditor(mapBase.mapBaseId)
+                                },
+                                modifier = Modifier.padding(8.dp)
+                            ) {
+                                Text(text = "Edit")
+                            }
+                            Button(
+                                onClick = {
+                                    locationListViewModel.deleteMapBase(mapBase)
+                                },
+                                modifier = Modifier.padding(8.dp)
+                            ) {
+                                Text(text = "Delete")
+                            }
                         }
                     }
                 }

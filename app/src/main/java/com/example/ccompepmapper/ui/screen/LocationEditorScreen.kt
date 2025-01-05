@@ -42,19 +42,22 @@ import dagger.hilt.android.qualifiers.ActivityContext
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.GroundOverlay
+import kotlin.math.asin
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationMapScreen(
-    onNavigateToLocationList: () -> Unit = {},
-    locationMapViewModel: LocationMapViewModel = hiltViewModel(),
+fun LocationEditorScreen(
+    onNavigateToLocationList: () -> Unit,
+    locationEditorViewModel: LocationEditorViewModel = hiltViewModel(),
     @ActivityContext context: Context = LocalContext.current,
-    mapBaseId: Int
-) {
+    mapBaseId: Int) {
     val initialGeoPoint = GeoPoint(47.0, 19.0)
-
-    val mapBase: MapBase? by locationMapViewModel.getMapBase(mapBaseId).collectAsState(initial = null)
-    val mapLayer: MapLayer? by locationMapViewModel.getMapLayerById(mapBaseId).collectAsState(initial = null)
+    val mapBase: MapBase? by locationEditorViewModel.getMapBase(mapBaseId).collectAsState(initial = null)
+    val mapLayer: MapLayer? by locationEditorViewModel.getMapLayerById(mapBaseId).collectAsState(initial = null)
 
     var solidCameraState by remember {
         mutableStateOf(
@@ -119,7 +122,7 @@ fun LocationMapScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Location Map") })
+            TopAppBar(title = { Text("Location Editor") })
         }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding).fillMaxHeight(),
@@ -143,22 +146,85 @@ fun LocationMapScreen(
                     state = markerState
                 )
             }
-
             Row(modifier = Modifier.background(Color.White).fillMaxHeight()
                 .fillMaxWidth(),
-                    verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
+                verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
                 Button(onClick = {
                     onNavigateToLocationList()
                 }) {
-                    Text(text = "Back")
+                    Text("Back")
+                }
+                Button(onClick = {
+                    val newBorderPoints = calculateDestinationPoints(
+                        GeoPoint(
+                            solidCameraState.geoPoint.latitude,
+                            solidCameraState.geoPoint.longitude
+                        ), 50.0)
+                    locationEditorViewModel.addNewMapBaseAndMapLayer(
+                        MapLayer(
+                            upperLeftLatitude = newBorderPoints.first.latitude,
+                            upperLeftLongitude = newBorderPoints.first.longitude,
+                            lowerRightLatitude = newBorderPoints.second.latitude,
+                            lowerRightLongitude = newBorderPoints.second.longitude
+                        ),
+//                    null,
+                        MapBase(
+                            mapLayerId = null,
+                            name = "EP",
+                            latitude = solidCameraState.geoPoint.latitude,
+                            longitude = solidCameraState.geoPoint.longitude,
+                            zoomLevel = solidCameraState.zoom,
+                            destinationRadius = 50.0
+                        )
+                    )
+                }) {
+                    Text(text = "Save MapBase")
                 }
             }
         }
+
     }
+
+
+
+
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun MapDetailsPreview() {
-//    LocationMapScreen()
-//}
+fun calculateDestinationPoints(origin: GeoPoint, distanceKm: Double): Pair<GeoPoint, GeoPoint> {
+    val earthRadiusKm = 6371.0 // Earth's radius in kilometers
+
+    // Convert distance to radians
+    val distanceRad = (distanceKm * 2) / earthRadiusKm
+
+    // Calculate diagonal distance (radius of circumscribed circle)
+    val diagonalDistanceRad = distanceRad / sqrt(2.0)
+
+    // Calculate bearing for NW (315 degrees) and SE (135 degrees)
+    val bearingNW = Math.toRadians(315.0)
+    val bearingSE = Math.toRadians(135.0)
+
+    // Calculate destination latitudes and longitudes using diagonal distance
+    val latNW = asin(
+        sin(Math.toRadians(origin.latitude)) * cos(diagonalDistanceRad) +
+                cos(Math.toRadians(origin.latitude)) * sin(diagonalDistanceRad) * cos(bearingNW)
+    )
+    val lonNW = Math.toRadians(origin.longitude) + atan2(
+        sin(bearingNW) * sin(diagonalDistanceRad) * cos(Math.toRadians(origin.latitude)),
+        cos(diagonalDistanceRad) - sin(Math.toRadians(origin.latitude)) * sin(latNW)
+    )
+
+    val latSE = asin(
+        sin(Math.toRadians(origin.latitude)) * cos(diagonalDistanceRad) +
+                cos(Math.toRadians(origin.latitude)) * sin(diagonalDistanceRad) * cos(bearingSE)
+    )
+    val lonSE = Math.toRadians(origin.longitude) + atan2(
+        sin(bearingSE) * sin(diagonalDistanceRad) * cos(Math.toRadians(origin.latitude)),
+        cos(diagonalDistanceRad) - sin(Math.toRadians(origin.latitude)) * sin(latSE)
+    )
+
+    // Convert back to degrees
+    return Pair(
+        GeoPoint(Math.toDegrees(latNW), Math.toDegrees(lonNW)),
+        GeoPoint(Math.toDegrees(latSE), Math.toDegrees(lonSE))
+    )
+}

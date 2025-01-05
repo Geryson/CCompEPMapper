@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [MapBase::class, MapLayer::class], version = 1, exportSchema = false)
+@Database(entities = [MapBase::class, MapLayer::class], version = 2, exportSchema = false)
 abstract class EPMapperDatabase : RoomDatabase() {
     abstract fun mapBaseDao(): MapBaseDao
     abstract fun mapLayerDao(): MapLayerDao
