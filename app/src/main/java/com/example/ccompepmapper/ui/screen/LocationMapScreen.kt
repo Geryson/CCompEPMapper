@@ -1,11 +1,18 @@
 package com.example.ccompepmapper.ui.screen
 
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -15,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
@@ -40,6 +48,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationMapScreen(
     onNavigateToLocationList: () -> Unit = {},
@@ -112,76 +121,70 @@ fun LocationMapScreen(
     } else {
         // Display loading indicator or placeholder
     }
-    Column {
 
-        OpenStreetMap(
-            modifier = Modifier
-                .height(500.dp),
-            cameraState = solidCameraState,
-            properties = mapProperties,
-            overlayManagerState = overlayManagerState,
-            onFirstLoadListener = {
-                val copyright = CopyrightOverlay(context)
-                overlayManagerState.overlayManager.add(copyright)
-            },
-            onMapClick = {
-                markerState.geoPoint = it
-                solidCameraState.geoPoint = it
-            }
-        ) {
-            Marker(
-                state = markerState
-            )
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("Location Map") })
         }
-
-        Text(text = "Go back, Traveler!")
-        Row {
-            Button(onClick = {
-                onNavigateToLocationList()
-            }) {
-                Text(text = "Back")
-            }
-
-            Button(onClick = {
-                solidCameraState.geoPoint = GeoPoint(
-                    47.5061, 19.1758
+    ) { innerPadding ->
+        Column(modifier = Modifier.padding(innerPadding).fillMaxHeight(),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceEvenly) {
+            OpenStreetMap(
+                modifier = Modifier
+                    .height(400.dp),
+                cameraState = solidCameraState,
+                properties = mapProperties,
+                overlayManagerState = overlayManagerState,
+                onFirstLoadListener = {
+                    val copyright = CopyrightOverlay(context)
+                    overlayManagerState.overlayManager.add(copyright)
+                },
+                onMapClick = {
+                    markerState.geoPoint = it
+                    solidCameraState.geoPoint = it
+                }
+            ) {
+                Marker(
+                    state = markerState
                 )
             }
-            ) {
-                Text(text = "Go to EP")
-            }
-            Button(onClick = {
-                overlay.transparency = 0f
-            }) {
-                Text(text = "1f")
-            }
-            Button(onClick = {
-                val newBorderPoints = calculateDestinationPoints(
+
+            Row(modifier = Modifier.background(Color.White).fillMaxHeight()
+                .fillMaxWidth()) {
+                Button(onClick = {
+                    onNavigateToLocationList()
+                }) {
+                    Text(text = "Back")
+                }
+                Button(onClick = {
+                    val newBorderPoints = calculateDestinationPoints(
                         GeoPoint(
                             solidCameraState.geoPoint.latitude,
                             solidCameraState.geoPoint.longitude
                         ), 50.0)
-                locationMapViewModel.addNewMapBaseAndMapLayer(
-                    MapLayer(
-                        upperLeftLatitude = newBorderPoints.first.latitude,
-                        upperLeftLongitude = newBorderPoints.first.longitude,
-                        lowerRightLatitude = newBorderPoints.second.latitude,
-                        lowerRightLongitude = newBorderPoints.second.longitude
-                    ),
+                    locationMapViewModel.addNewMapBaseAndMapLayer(
+                        MapLayer(
+                            upperLeftLatitude = newBorderPoints.first.latitude,
+                            upperLeftLongitude = newBorderPoints.first.longitude,
+                            lowerRightLatitude = newBorderPoints.second.latitude,
+                            lowerRightLongitude = newBorderPoints.second.longitude
+                        ),
 //                    null,
-                    MapBase(
-                        mapLayerId = null,
-                        name = "EP",
-                        latitude = solidCameraState.geoPoint.latitude,
-                        longitude = solidCameraState.geoPoint.longitude,
-                        zoomLevel = solidCameraState.zoom
+                        MapBase(
+                            mapLayerId = null,
+                            name = "EP",
+                            latitude = solidCameraState.geoPoint.latitude,
+                            longitude = solidCameraState.geoPoint.longitude,
+                            zoomLevel = solidCameraState.zoom
+                        )
                     )
-                )
-            }) {
-                Text(text = "Save MapBase")
+                }) {
+                    Text(text = "Save MapBase")
+                }
             }
         }
     }
+
 }
 
 fun calculateDestinationPoints(origin: GeoPoint, distanceKm: Double): Pair<GeoPoint, GeoPoint> {
