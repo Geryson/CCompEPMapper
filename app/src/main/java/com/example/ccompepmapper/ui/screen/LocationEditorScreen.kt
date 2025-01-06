@@ -17,7 +17,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
@@ -34,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.ccompepmapper.EPMapperTopAppBar
 import com.example.ccompepmapper.R
 import com.example.ccompepmapper.data.MapBase
 import com.example.ccompepmapper.data.MapLayer
@@ -166,7 +166,7 @@ fun LocationEditorScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Location Editor") })
+            EPMapperTopAppBar("Location Editor")
         }
     ) { innerPadding ->
         Column(

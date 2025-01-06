@@ -13,7 +13,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -30,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.ccompepmapper.EPMapperTopAppBar
 import com.example.ccompepmapper.R
 import com.example.ccompepmapper.data.MapBase
 import com.example.ccompepmapper.data.MapLayer
@@ -122,7 +122,7 @@ fun LocationMapScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Location Map") })
+            EPMapperTopAppBar("Location Map")
         }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding).fillMaxHeight(),
@@ -149,35 +149,16 @@ fun LocationMapScreen(
                 horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
                 Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
                     if (mapBase != null) {
-                        val labelTextSize = 30.sp
-                        val labelFontWeight = FontWeight.SemiBold
-
-                        val valueTextSize = 40.sp
-                        val valueFontWeight = FontWeight.Bold
-                        val valueColor = Color(0xFF557A00)
-                        Text(text = "Map name",
-                            fontSize = labelTextSize,
-                            fontWeight = labelFontWeight)
-                        Text(text = mapBase!!.name,
-                            fontSize = valueTextSize,
-                            fontWeight = valueFontWeight,
-                            color = valueColor)
-                        Text(text = "Radius on map",
-                            fontSize = labelTextSize,
-                            fontWeight = labelFontWeight)
+                        LabelText(text = "Map name")
+                        ValueText(text = mapBase!!.name)
+                        LabelText(text = "Radius on map")
                         if (mapBase!!.destinationRadius == 0.0) {
-                            Text(text = "Not set",
-                                fontSize = valueTextSize,
-                                fontWeight = valueFontWeight,
-                                color = valueColor)
+                            ValueText(text = "Not set")
                         } else {
                             val destinationValue = mapBase!!.destinationRadius
                             val decimalFormat = DecimalFormat("#.##")
                             val formattedValue = decimalFormat.format(destinationValue)
-                            Text(text = "$formattedValue km",
-                                fontSize = valueTextSize,
-                                fontWeight = valueFontWeight,
-                                color = valueColor)
+                            ValueText(text = "$formattedValue km")
                         }
                     }
                     Row(modifier = Modifier.padding(16.dp).fillMaxWidth(),
@@ -192,6 +173,25 @@ fun LocationMapScreen(
             }
         }
     }
+}
+
+@Composable
+fun LabelText(text: String) {
+    Text(
+        text = text,
+        fontSize = 30.sp,
+        fontWeight = FontWeight.SemiBold
+    )
+}
+
+@Composable
+fun ValueText(text: String) {
+    Text(
+        text = text,
+        fontSize = 40.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color(0xFF557A00)
+    )
 }
 
 //@Preview(showBackground = true)
