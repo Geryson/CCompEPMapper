@@ -4,23 +4,30 @@ import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -55,139 +62,268 @@ fun LocationEditorScreen(
     locationEditorViewModel: LocationEditorViewModel = hiltViewModel(),
     @ActivityContext context: Context = LocalContext.current,
     mapBaseId: Int) {
-    val initialGeoPoint = GeoPoint(47.0, 19.0)
+    val initialGeoPoint by remember { mutableStateOf(GeoPoint(47.0, 19.0)) }
+    var initialZoomLevel by remember { mutableFloatStateOf(5f) }
+
+    var layerNWLatitude by remember { mutableDoubleStateOf(0.0) }
+    var layerNWLongitude by remember { mutableDoubleStateOf(0.0) }
+    var layerSELatitude by remember { mutableDoubleStateOf(0.0) }
+    var layerSELongitude by remember { mutableDoubleStateOf(0.0) }
+
     val mapBase: MapBase? by locationEditorViewModel.getMapBase(mapBaseId).collectAsState(initial = null)
     val mapLayer: MapLayer? by locationEditorViewModel.getMapLayerById(mapBaseId).collectAsState(initial = null)
 
-    var solidCameraState by remember {
+
+
+    var name by remember { mutableStateOf("") }
+    var zoomLevel by remember { mutableFloatStateOf(5f) }
+    var destinationRadius by remember { mutableFloatStateOf(50f) }
+    var createMapLayer by remember { mutableStateOf(false) }
+
+    var isNameError by remember { mutableStateOf(false) }
+
+    val editorCameraState by remember {
         mutableStateOf(
             CameraState(
                 CameraProperty(
                     geoPoint = initialGeoPoint,
-                    zoom = 0.0
+                    zoom = initialZoomLevel.toDouble()
                 )
             )
         )
     }
 
-    var mapProperties by remember {
+    var editorMapProperties by remember {
         mutableStateOf(DefaultMapProperties)
     }
 
-    val overlay by remember {
+    val editorOverlay by remember {
         mutableStateOf(GroundOverlay())
     }
 
-    val overlayManagerState = rememberOverlayManagerState()
+    val editorOverlayManagerState = rememberOverlayManagerState()
 
     SideEffect {
-        mapProperties = mapProperties
+        editorMapProperties = editorMapProperties
             .copy(isTilesScaledToDpi = true)
             .copy(zoomButtonVisibility = ZoomButtonVisibility.NEVER)
     }
 
-    LaunchedEffect(solidCameraState.zoom) {
-        val zoom = solidCameraState.zoom
-        val geoPoint = solidCameraState.geoPoint
-        solidCameraState = CameraState(
-            CameraProperty(
-                geoPoint = geoPoint,
-                zoom = zoom
-            )
-        )
-    }
+//    LaunchedEffect(editorCameraState.zoom) {
+//        val zoom = editorCameraState.zoom
+//        val geoPoint = editorCameraState.geoPoint
+//        editorCameraState = CameraState(
+//            CameraProperty(
+//                geoPoint = geoPoint,
+//                zoom = zoom
+//            )
+//        )
+//    }
 
-    val markerState = rememberMarkerState(geoPoint = initialGeoPoint)
+//    LaunchedEffect(zoomLevel) {
+//        editorCameraState.zoom = zoomLevel.toDouble()
+//        editorCameraState = CameraState(
+//            CameraProperty(
+//                geoPoint = editorCameraState.geoPoint,
+//                zoom = zoomLevel.toDouble()
+//            )
+//        )
+//    }
+
+    val editorMarkerState = rememberMarkerState(geoPoint = initialGeoPoint)
 
     if (mapBase != null) {
-        solidCameraState.geoPoint = GeoPoint(mapBase!!.latitude, mapBase!!.longitude)
-        solidCameraState.zoom = mapBase!!.zoomLevel
+        editorCameraState.geoPoint = GeoPoint(mapBase!!.latitude, mapBase!!.longitude)
+        editorCameraState.zoom = mapBase!!.zoomLevel
 
-        markerState.geoPoint = GeoPoint(mapBase!!.latitude, mapBase!!.longitude)
+        editorMarkerState.geoPoint = GeoPoint(mapBase!!.latitude, mapBase!!.longitude)
+        name = mapBase!!.name
+        zoomLevel = mapBase!!.zoomLevel.toFloat()
+        destinationRadius = mapBase!!.destinationRadius.toFloat()
+        createMapLayer = mapLayer != null
     } else {
         // Display loading indicator or placeholder
     }
 
-    if (mapLayer != null) {
-        overlay.transparency = 0.9f
-        overlay.image = context.getDrawable(R.drawable.circles)?.toBitmap(1000, 1000, null)
-        overlay.setPosition(
-            GeoPoint(mapLayer!!.upperLeftLatitude, mapLayer!!.upperLeftLongitude),
-            GeoPoint(mapLayer!!.lowerRightLatitude, mapLayer!!.lowerRightLongitude))
-
-        overlayManagerState.overlayManager.add(overlay)
-    } else {
-        // Display loading indicator or placeholder
-    }
+//    if (mapLayer != null) {
+//        editorOverlay.transparency = 0.9f
+//        editorOverlay.image = context.getDrawable(R.drawable.circles)?.toBitmap(1000, 1000, null)
+//        editorOverlay.setPosition(
+//            GeoPoint(mapLayer!!.upperLeftLatitude, mapLayer!!.upperLeftLongitude),
+//            GeoPoint(mapLayer!!.lowerRightLatitude, mapLayer!!.lowerRightLongitude))
+//        editorOverlayManagerState.overlayManager.add(editorOverlay)
+//    } else {
+//        // Display loading indicator or placeholder
+//    }
 
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Location Editor") })
         }
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding).fillMaxHeight(),
-            verticalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceEvenly) {
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxHeight(),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceEvenly
+        ) {
             OpenStreetMap(
                 modifier = Modifier
                     .height(300.dp),
-                cameraState = solidCameraState,
-                properties = mapProperties,
-                overlayManagerState = overlayManagerState,
+                cameraState = editorCameraState,
+                properties = editorMapProperties,
+                overlayManagerState = editorOverlayManagerState,
                 onFirstLoadListener = {
                     val copyright = CopyrightOverlay(context)
-                    overlayManagerState.overlayManager.add(copyright)
+                    editorOverlayManagerState.overlayManager.add(copyright)
                 },
                 onMapClick = {
-                    markerState.geoPoint = it
-                    solidCameraState.geoPoint = it
+                    editorMarkerState.geoPoint = it
+                    editorCameraState.geoPoint = it
+                    changeVisibleRadius(editorCameraState, GeoPoint(layerNWLatitude, layerNWLongitude), GeoPoint(layerSELatitude, layerSELongitude), editorOverlay, destinationRadius.toDouble())
                 }
             ) {
                 Marker(
-                    state = markerState
+                    state = editorMarkerState
                 )
             }
-            Row(modifier = Modifier.background(Color.White).fillMaxHeight()
-                .fillMaxWidth(),
-                verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
-                Button(onClick = {
-                    onNavigateToLocationList()
-                }) {
-                    Text("Back")
-                }
-                Button(onClick = {
-                    val newBorderPoints = calculateDestinationPoints(
-                        GeoPoint(
-                            solidCameraState.geoPoint.latitude,
-                            solidCameraState.geoPoint.longitude
-                        ), 50.0)
-                    locationEditorViewModel.addNewMapBaseAndMapLayer(
-                        MapLayer(
-                            upperLeftLatitude = newBorderPoints.first.latitude,
-                            upperLeftLongitude = newBorderPoints.first.longitude,
-                            lowerRightLatitude = newBorderPoints.second.latitude,
-                            lowerRightLongitude = newBorderPoints.second.longitude
-                        ),
-//                    null,
-                        MapBase(
-                            mapLayerId = null,
-                            name = "EP",
-                            latitude = solidCameraState.geoPoint.latitude,
-                            longitude = solidCameraState.geoPoint.longitude,
-                            zoomLevel = solidCameraState.zoom,
-                            destinationRadius = 50.0
-                        )
+            Row(
+                modifier = Modifier
+                    .background(Color.White)
+                    .fillMaxHeight()
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = {
+                            name = it
+                            isNameError = !locationEditorViewModel.isNameValid(name)
+                        },
+                        label = { Text("Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        isError = isNameError
                     )
-                }) {
-                    Text(text = "Save MapBase")
+                    if (isNameError) {
+                        Text(
+                            text = "Name must be at least 3 characters long",
+                            color = Color.Red,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Slider(
+                        value = zoomLevel,
+                        onValueChange = {
+                            zoomLevel = it
+                            initialZoomLevel = it
+                            editorCameraState.zoom = zoomLevel.toDouble()
+                                        },
+                        valueRange = 5f..18f,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text("Zoom Level: ${zoomLevel.toInt()}")
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Checkbox(
+                            checked = createMapLayer,
+                            onCheckedChange = {
+                                createMapLayer = it
+                                if (!it) {
+                                    destinationRadius = 0.0F
+                                    editorOverlayManagerState.overlayManager.remove(editorOverlay)
+                                } else {
+                                    destinationRadius =
+                                        if (mapBase != null) destinationRadius else 50.0F
+
+                                    editorOverlay.transparency = 0.9f
+                                    editorOverlay.image = context.getDrawable(R.drawable.circles)?.toBitmap(1000, 1000, null)
+                                    changeVisibleRadius(editorCameraState, GeoPoint(layerNWLatitude, layerNWLongitude), GeoPoint(layerSELatitude, layerSELongitude), editorOverlay, destinationRadius.toDouble())
+                                    editorOverlayManagerState.overlayManager.add(editorOverlay)
+                                }
+                            }
+                        )
+                        Text("Create Map Layer")
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Slider(
+                        value = destinationRadius,
+                        onValueChange = {
+                            destinationRadius = it
+
+                            if (destinationRadius > 0) {
+                                changeVisibleRadius(editorCameraState, GeoPoint(layerNWLatitude, layerNWLongitude), GeoPoint(layerSELatitude, layerSELongitude), editorOverlay, destinationRadius.toDouble())
+                            }
+                        },
+                        valueRange = 0f..100f,
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = createMapLayer
+                    )
+                    Text("Destination Radius: ${destinationRadius.toInt()}")
+
+                    Button(enabled = !isNameError,
+                        onClick = {
+                        val newBorderPoints = calculateDestinationPoints(
+                            GeoPoint(
+                                editorCameraState.geoPoint.latitude,
+                                editorCameraState.geoPoint.longitude
+                            ), 50.0
+                        )
+                        locationEditorViewModel.addNewMapBaseAndMapLayer(
+                            MapLayer(
+                                upperLeftLatitude = newBorderPoints.first.latitude,
+                                upperLeftLongitude = newBorderPoints.first.longitude,
+                                lowerRightLatitude = newBorderPoints.second.latitude,
+                                lowerRightLongitude = newBorderPoints.second.longitude
+                            ),
+//                    null,
+                            MapBase(
+                                mapLayerId = null,
+                                name = "EP",
+                                latitude = editorCameraState.geoPoint.latitude,
+                                longitude = editorCameraState.geoPoint.longitude,
+                                zoomLevel = editorCameraState.zoom,
+                                destinationRadius = 50.0
+                            )
+                        )
+                    }) {
+                        Text(text = "Save MapBase")
+                    }
+                    Button(onClick = {
+                        onNavigateToLocationList()
+                    }) {
+                        Text("Back")
+                    }
                 }
             }
         }
-
     }
+}
 
-
-
-
+fun changeVisibleRadius(cameraState: CameraState, nwPoint: GeoPoint, sePoint: GeoPoint, overlay: GroundOverlay, destinationRadius: Double) {
+    val newBorderPoints = calculateDestinationPoints(
+        GeoPoint(
+            cameraState.geoPoint.latitude,
+            cameraState.geoPoint.longitude
+        ), destinationRadius
+    )
+    nwPoint.latitude = newBorderPoints.first.latitude
+    nwPoint.longitude = newBorderPoints.first.longitude
+    sePoint.latitude = newBorderPoints.second.latitude
+    sePoint.longitude = newBorderPoints.second.longitude
+    overlay.setPosition(
+        GeoPoint(nwPoint.latitude, nwPoint.longitude),
+        GeoPoint(sePoint.latitude, sePoint.longitude)
+    )
 }
 
 fun calculateDestinationPoints(origin: GeoPoint, distanceKm: Double): Pair<GeoPoint, GeoPoint> {

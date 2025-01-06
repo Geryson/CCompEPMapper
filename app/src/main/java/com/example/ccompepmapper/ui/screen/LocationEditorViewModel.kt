@@ -8,7 +8,7 @@ import com.example.ccompepmapper.repository.EPMapperDBRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,7 +20,7 @@ class LocationEditorViewModel @Inject constructor(
         if (mapBaseId != -1) {
             return dbRepository.getMapBaseById(mapBaseId)
         }
-        return emptyFlow()
+        return flowOf(MapBase(-1,null, "", 47.0, 19.0, 5.0, 0.0))
     }
 
     fun getMapLayerById(mapBaseId: Int): Flow<MapLayer?> {
@@ -36,5 +36,9 @@ class LocationEditorViewModel @Inject constructor(
                 dbRepository.insertMapBase(mapBase)
             }
         }
+    }
+
+    fun isNameValid(name: String): Boolean {
+        return name.length >= 3
     }
 }

@@ -56,7 +56,7 @@ fun LocationMapScreen(
     val mapBase: MapBase? by locationMapViewModel.getMapBase(mapBaseId).collectAsState(initial = null)
     val mapLayer: MapLayer? by locationMapViewModel.getMapLayerById(mapBaseId).collectAsState(initial = null)
 
-    var solidCameraState by remember {
+    var viewerCameraState by remember {
         mutableStateOf(
             CameraState(
                 CameraProperty(
@@ -67,26 +67,26 @@ fun LocationMapScreen(
         )
     }
 
-    var mapProperties by remember {
+    var viewerMapProperties by remember {
         mutableStateOf(DefaultMapProperties)
     }
 
-    val overlay by remember {
+    val viewerOverlay by remember {
         mutableStateOf(GroundOverlay())
     }
 
-    val overlayManagerState = rememberOverlayManagerState()
+    val viewerOverlayManagerState = rememberOverlayManagerState()
 
     SideEffect {
-        mapProperties = mapProperties
+        viewerMapProperties = viewerMapProperties
             .copy(isTilesScaledToDpi = true)
             .copy(zoomButtonVisibility = ZoomButtonVisibility.NEVER)
     }
 
-    LaunchedEffect(solidCameraState.zoom) {
-        val zoom = solidCameraState.zoom
-        val geoPoint = solidCameraState.geoPoint
-        solidCameraState = CameraState(
+    LaunchedEffect(viewerCameraState.zoom) {
+        val zoom = viewerCameraState.zoom
+        val geoPoint = viewerCameraState.geoPoint
+        viewerCameraState = CameraState(
             CameraProperty(
                 geoPoint = geoPoint,
                 zoom = zoom
@@ -94,25 +94,25 @@ fun LocationMapScreen(
         )
     }
 
-    val markerState = rememberMarkerState(geoPoint = initialGeoPoint)
+    val viewerMarkerState = rememberMarkerState(geoPoint = initialGeoPoint)
 
     if (mapBase != null) {
-        solidCameraState.geoPoint = GeoPoint(mapBase!!.latitude, mapBase!!.longitude)
-        solidCameraState.zoom = mapBase!!.zoomLevel
+        viewerCameraState.geoPoint = GeoPoint(mapBase!!.latitude, mapBase!!.longitude)
+        viewerCameraState.zoom = mapBase!!.zoomLevel
 
-        markerState.geoPoint = GeoPoint(mapBase!!.latitude, mapBase!!.longitude)
+        viewerMarkerState.geoPoint = GeoPoint(mapBase!!.latitude, mapBase!!.longitude)
     } else {
         // Display loading indicator or placeholder
     }
 
     if (mapLayer != null) {
-        overlay.transparency = 0.9f
-        overlay.image = context.getDrawable(R.drawable.circles)?.toBitmap(1000, 1000, null)
-        overlay.setPosition(
+        viewerOverlay.transparency = 0.9f
+        viewerOverlay.image = context.getDrawable(R.drawable.circles)?.toBitmap(1000, 1000, null)
+        viewerOverlay.setPosition(
             GeoPoint(mapLayer!!.upperLeftLatitude, mapLayer!!.upperLeftLongitude),
             GeoPoint(mapLayer!!.lowerRightLatitude, mapLayer!!.lowerRightLongitude))
 
-        overlayManagerState.overlayManager.add(overlay)
+        viewerOverlayManagerState.overlayManager.add(viewerOverlay)
     } else {
         // Display loading indicator or placeholder
     }
@@ -127,30 +127,33 @@ fun LocationMapScreen(
             OpenStreetMap(
                 modifier = Modifier
                     .height(300.dp),
-                cameraState = solidCameraState,
-                properties = mapProperties,
-                overlayManagerState = overlayManagerState,
+                cameraState = viewerCameraState,
+                properties = viewerMapProperties,
+                overlayManagerState = viewerOverlayManagerState,
                 onFirstLoadListener = {
                     val copyright = CopyrightOverlay(context)
-                    overlayManagerState.overlayManager.add(copyright)
-                },
-                onMapClick = {
-                    markerState.geoPoint = it
-                    solidCameraState.geoPoint = it
+                    viewerOverlayManagerState.overlayManager.add(copyright)
                 }
             ) {
                 Marker(
-                    state = markerState
+                    state = viewerMarkerState
                 )
             }
 
             Row(modifier = Modifier.background(Color.White).fillMaxHeight()
                 .fillMaxWidth(),
-                    verticalAlignment = androidx.compose.ui.Alignment.Bottom) {
-                Button(onClick = {
-                    onNavigateToLocationList()
-                }) {
-                    Text(text = "Back")
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    if (mapBase != null) {
+                        Text(text = mapBase!!.name)
+                        Text(text = mapBase!!.destinationRadius.toString())
+                    }
+                    Button(onClick = {
+                        onNavigateToLocationList()
+                    }) {
+                        Text(text = "Back")
+                    }
                 }
             }
         }
