@@ -209,7 +209,8 @@ fun LocationEditorScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally) {
                     OutlinedTextField(
                         value = name,
                         onValueChange = {

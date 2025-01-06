@@ -1,6 +1,7 @@
 package com.example.ccompepmapper.ui.screen
 
 import android.content.Context
+import android.icu.text.DecimalFormat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,7 +25,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.ccompepmapper.R
@@ -144,15 +147,46 @@ fun LocationMapScreen(
                 .fillMaxWidth(),
                     verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
                 horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
                     if (mapBase != null) {
-                        Text(text = mapBase!!.name)
-                        Text(text = mapBase!!.destinationRadius.toString())
+                        val labelTextSize = 30.sp
+                        val labelFontWeight = FontWeight.SemiBold
+
+                        val valueTextSize = 40.sp
+                        val valueFontWeight = FontWeight.Bold
+                        val valueColor = Color(0xFF557A00)
+                        Text(text = "Map name",
+                            fontSize = labelTextSize,
+                            fontWeight = labelFontWeight)
+                        Text(text = mapBase!!.name,
+                            fontSize = valueTextSize,
+                            fontWeight = valueFontWeight,
+                            color = valueColor)
+                        Text(text = "Radius on map",
+                            fontSize = labelTextSize,
+                            fontWeight = labelFontWeight)
+                        if (mapBase!!.destinationRadius == 0.0) {
+                            Text(text = "Not set",
+                                fontSize = valueTextSize,
+                                fontWeight = valueFontWeight,
+                                color = valueColor)
+                        } else {
+                            val destinationValue = mapBase!!.destinationRadius
+                            val decimalFormat = DecimalFormat("#.##")
+                            val formattedValue = decimalFormat.format(destinationValue)
+                            Text(text = "$formattedValue km",
+                                fontSize = valueTextSize,
+                                fontWeight = valueFontWeight,
+                                color = valueColor)
+                        }
                     }
-                    Button(onClick = {
-                        onNavigateToLocationList()
-                    }) {
-                        Text(text = "Back")
+                    Row(modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
+                        Button(onClick = {
+                            onNavigateToLocationList()
+                        }) {
+                            Text(text = "Back")
+                        }
                     }
                 }
             }
