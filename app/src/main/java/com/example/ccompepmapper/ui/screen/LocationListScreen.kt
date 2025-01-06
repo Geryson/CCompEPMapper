@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -31,6 +32,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,8 +43,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.ccompepmapper.CIRCLES_LAYER
 import com.example.ccompepmapper.EPMapperTopAppBar
+import com.example.ccompepmapper.PARLIAMENT_LAYER
+import com.example.ccompepmapper.SELECTED_LAYER
 import com.example.ccompepmapper.ui.theme.CCompEPMapperTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,6 +59,7 @@ fun LocationListScreen(
     locationListViewModel: LocationListViewModel = hiltViewModel()
 ) {
     val mapsList by locationListViewModel.getMapBases().collectAsState(emptyList())
+    var parliamentDialogState by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -68,6 +77,19 @@ fun LocationListScreen(
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
+            if (parliamentDialogState) {
+                ParliamentDemoDialog(onDialogClose = { parliamentDialogState = false },
+                    locationListViewModel)
+            }
+            Button(
+                onClick = {
+                    parliamentDialogState = true
+                },
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+
+            ) {
+                Text(text = "Read about Parliament Demo")
+            }
             if (mapsList.isEmpty()) {
                 Text(text = "No maps created...",
                     modifier = Modifier
@@ -91,10 +113,11 @@ fun LocationListScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column(modifier = Modifier.padding(32.dp)) {
+                                Column(modifier = Modifier.padding(32.dp)
+                                    .weight(3f)) {
                                     Text(text = mapBase.name,
                                         fontWeight = FontWeight.ExtraBold,
-                                        fontSize = 40.sp,
+                                        fontSize = 30.sp,
                                         color = Color(0xFF557A00)
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
@@ -121,14 +144,14 @@ fun LocationListScreen(
                                     }
                                 }
                                 Column(
-                                    modifier = Modifier.padding(16.dp),
+                                    modifier = Modifier.padding(16.dp).weight(2f),
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Button(
                                         onClick = {
                                             onNavigateToLocationEditor(mapBase.mapBaseId)
                                         },
-                                        modifier = Modifier.padding(8.dp)
+                                        modifier = Modifier.padding(8.dp).fillMaxWidth()
                                     ) {
                                         Text(text = "Edit")
                                     }
@@ -136,7 +159,7 @@ fun LocationListScreen(
                                         onClick = {
                                             locationListViewModel.deleteMapBase(mapBase)
                                         },
-                                        modifier = Modifier.padding(8.dp)
+                                        modifier = Modifier.padding(8.dp).fillMaxWidth()
                                     ) {
                                         Text(text = "Delete")
                                     }
@@ -155,5 +178,44 @@ fun LocationListScreen(
 fun GreetingPreview() {
     CCompEPMapperTheme {
         LocationListScreen()
+    }
+}
+
+@Composable
+fun ParliamentDemoDialog(
+    onDialogClose: () -> Unit = {},
+    locationListViewModel: LocationListViewModel
+) {
+    var checkboxState by remember { mutableStateOf(SELECTED_LAYER == PARLIAMENT_LAYER) }
+    Dialog(onDismissRequest = onDialogClose) {
+        Column(modifier = Modifier.background(Color.White).padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(text = "With the button, a map entity can be made with the precise settings " +
+                    "for a Hungarian Parliament legend map. " +
+                    "With the checkbox, the user can choose between " +
+                    "the original, circular overlay and the experimental, legend map overlay. " +
+                    "These two combined demonstrates my initial ideas about this exam project. ",
+                textAlign = TextAlign.Center)
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = {
+                locationListViewModel.addParliamentMapBaseAndLayer()
+            }) {
+                Text(text = "Create a Parliament map")
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "Parliament layer enabled")
+                Checkbox(checked = checkboxState, onCheckedChange = {
+                    checkboxState = it
+                    SELECTED_LAYER = if (it) {
+                        PARLIAMENT_LAYER
+                    } else {
+                        CIRCLES_LAYER
+                    }
+                })
+            }
+            Button(onClick = onDialogClose) {
+                Text(text = "Close")
+            }
+        }
     }
 }

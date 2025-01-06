@@ -49,11 +49,17 @@ const val LOCATION_LIST_ROUTE = "location_list"
 const val LOCATION_MAP_ROUTE = "location_map/{mapbaseid}"
 const val LOCATION_EDITOR_ROUTE = "location_editor/{mapbaseid}"
 
+var PARLIAMENT_LAYER = R.drawable.parlamentmap
+var CIRCLES_LAYER = R.drawable.circles
+
+var SELECTED_LAYER = CIRCLES_LAYER
+
 @Composable
 fun EPMapperApp(
     navController: NavHostController = rememberNavController()
 ) {
     NavHost(navController = navController, startDestination = LOCATION_LIST_ROUTE) {
+
         composable(LOCATION_LIST_ROUTE) {
             LocationListScreen(
                 onNavigateToLocationMap = { mapBaseId ->
@@ -106,7 +112,8 @@ fun EPMapperTopAppBar(text: String) {
                 text,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
                     .padding(end = 8.dp)
             )
         },
@@ -119,3 +126,5 @@ fun EPMapperTopAppBar(text: String) {
         )
     )
 }
+
+

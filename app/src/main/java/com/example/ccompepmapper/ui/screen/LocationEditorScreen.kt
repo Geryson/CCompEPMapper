@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.ccompepmapper.EPMapperTopAppBar
-import com.example.ccompepmapper.R
+import com.example.ccompepmapper.SELECTED_LAYER
 import com.example.ccompepmapper.data.MapBase
 import com.example.ccompepmapper.data.MapLayer
 import com.utsman.osmandcompose.CameraProperty
@@ -153,8 +153,8 @@ fun LocationEditorScreen(
         layerSELatitude = mapLayer!!.lowerRightLatitude
         layerSELongitude = mapLayer!!.lowerRightLongitude
 
-        editorOverlay.transparency = 0.9f
-        editorOverlay.image = context.getDrawable(R.drawable.circles)?.toBitmap(1000, 1000, null)
+        editorOverlay.transparency = 0.3f
+        editorOverlay.image = context.getDrawable(SELECTED_LAYER)?.toBitmap(1000, 1000, null)
         editorOverlay.setPosition(
             GeoPoint(layerNWLatitude, layerNWLongitude),
             GeoPoint(layerSELatitude, layerSELongitude)
@@ -259,8 +259,8 @@ fun LocationEditorScreen(
                                 } else {
                                     destinationRadius = 50.0F
 
-                                    editorOverlay.transparency = 0.9f
-                                    editorOverlay.image = context.getDrawable(R.drawable.circles)
+                                    editorOverlay.transparency = 0.3f
+                                    editorOverlay.image = context.getDrawable(SELECTED_LAYER)
                                         ?.toBitmap(1000, 1000, null)
                                     changeVisibleRadius(
                                         editorCameraState,

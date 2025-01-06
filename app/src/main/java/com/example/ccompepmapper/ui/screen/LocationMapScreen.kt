@@ -12,13 +12,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -31,7 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.ccompepmapper.EPMapperTopAppBar
-import com.example.ccompepmapper.R
+import com.example.ccompepmapper.SELECTED_LAYER
 import com.example.ccompepmapper.data.MapBase
 import com.example.ccompepmapper.data.MapLayer
 import com.utsman.osmandcompose.CameraProperty
@@ -61,7 +62,7 @@ fun LocationMapScreen(
     val mapLayer: MapLayer? by locationMapViewModel.getMapLayerById(mapBaseId)
         .collectAsState(initial = null)
 
-    var layerShowed by remember { mutableStateOf(true) }
+    var layerTransparency by remember { mutableFloatStateOf(0.7f) }
 
     var viewerCameraState by remember {
         mutableStateOf(
@@ -113,8 +114,8 @@ fun LocationMapScreen(
     }
 
     if (mapLayer != null) {
-        viewerOverlay.transparency = 0.9f
-        viewerOverlay.image = context.getDrawable(R.drawable.circles)?.toBitmap(1000, 1000, null)
+        viewerOverlay.transparency = 0.7f
+        viewerOverlay.image = context.getDrawable(SELECTED_LAYER)?.toBitmap(1000, 1000, null)
         viewerOverlay.setPosition(
             GeoPoint(mapLayer!!.upperLeftLatitude, mapLayer!!.upperLeftLongitude),
             GeoPoint(mapLayer!!.lowerRightLatitude, mapLayer!!.lowerRightLongitude)
@@ -187,17 +188,24 @@ fun LocationMapScreen(
                         horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
                     ) {
                         Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                            Text("Show location layer",
+                            Text("Layer visibility",
                                 fontSize = 20.sp)
                             Spacer(modifier = Modifier.padding(8.dp))
-                            Switch(checked = layerShowed, onCheckedChange = {
-                                layerShowed = it
-                                if (it) {
-                                    viewerOverlayManagerState.overlayManager.add(viewerOverlay)
-                                } else {
-                                    viewerOverlayManagerState.overlayManager.remove(viewerOverlay)
-                                }
-                            })
+//                            Switch(checked = layerShowed, onCheckedChange = {
+//                                layerShowed = it
+//                                if (it) {
+//                                    viewerOverlayManagerState.overlayManager.add(viewerOverlay)
+//                                } else {
+//                                    viewerOverlayManagerState.overlayManager.remove(viewerOverlay)
+//                                }
+//                            })
+                            Slider(
+                                value = layerTransparency,
+                                onValueChange = {
+                                    layerTransparency = it
+                                    viewerOverlay.transparency = it
+                                },
+                            )
                         }
                         Button(onClick = {
                             onNavigateToLocationList()
