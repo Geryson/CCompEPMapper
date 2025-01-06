@@ -5,13 +5,14 @@ import android.icu.text.DecimalFormat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,7 +47,6 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.GroundOverlay
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationMapScreen(
     onNavigateToLocationList: () -> Unit = {},
@@ -56,8 +56,12 @@ fun LocationMapScreen(
 ) {
     val initialGeoPoint = GeoPoint(47.0, 19.0)
 
-    val mapBase: MapBase? by locationMapViewModel.getMapBase(mapBaseId).collectAsState(initial = null)
-    val mapLayer: MapLayer? by locationMapViewModel.getMapLayerById(mapBaseId).collectAsState(initial = null)
+    val mapBase: MapBase? by locationMapViewModel.getMapBase(mapBaseId)
+        .collectAsState(initial = null)
+    val mapLayer: MapLayer? by locationMapViewModel.getMapLayerById(mapBaseId)
+        .collectAsState(initial = null)
+
+    var layerShowed by remember { mutableStateOf(true) }
 
     var viewerCameraState by remember {
         mutableStateOf(
@@ -113,9 +117,12 @@ fun LocationMapScreen(
         viewerOverlay.image = context.getDrawable(R.drawable.circles)?.toBitmap(1000, 1000, null)
         viewerOverlay.setPosition(
             GeoPoint(mapLayer!!.upperLeftLatitude, mapLayer!!.upperLeftLongitude),
-            GeoPoint(mapLayer!!.lowerRightLatitude, mapLayer!!.lowerRightLongitude))
+            GeoPoint(mapLayer!!.lowerRightLatitude, mapLayer!!.lowerRightLongitude)
+        )
 
-        viewerOverlayManagerState.overlayManager.add(viewerOverlay)
+        if (!viewerOverlayManagerState.overlayManager.contains(viewerOverlay)) {
+            viewerOverlayManagerState.overlayManager.add(viewerOverlay)
+        }
     } else {
         // Display loading indicator or placeholder
     }
@@ -125,8 +132,12 @@ fun LocationMapScreen(
             EPMapperTopAppBar("Location Map")
         }
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding).fillMaxHeight(),
-            verticalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceEvenly) {
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxHeight(),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceEvenly
+        ) {
             OpenStreetMap(
                 modifier = Modifier
                     .height(300.dp),
@@ -143,11 +154,19 @@ fun LocationMapScreen(
                 )
             }
 
-            Row(modifier = Modifier.background(Color.White).fillMaxHeight()
-                .fillMaxWidth(),
-                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
-                Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .background(Color.White)
+                    .fillMaxHeight()
+                    .fillMaxWidth(),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                ) {
                     if (mapBase != null) {
                         LabelText(text = "Map name")
                         ValueText(text = mapBase!!.name)
@@ -161,8 +180,25 @@ fun LocationMapScreen(
                             ValueText(text = "$formattedValue km")
                         }
                     }
-                    Row(modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
+                    ) {
+                        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            Text("Show location layer",
+                                fontSize = 20.sp)
+                            Spacer(modifier = Modifier.padding(8.dp))
+                            Switch(checked = layerShowed, onCheckedChange = {
+                                layerShowed = it
+                                if (it) {
+                                    viewerOverlayManagerState.overlayManager.add(viewerOverlay)
+                                } else {
+                                    viewerOverlayManagerState.overlayManager.remove(viewerOverlay)
+                                }
+                            })
+                        }
                         Button(onClick = {
                             onNavigateToLocationList()
                         }) {
