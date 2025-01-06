@@ -159,7 +159,9 @@ fun LocationEditorScreen(
             GeoPoint(layerNWLatitude, layerNWLongitude),
             GeoPoint(layerSELatitude, layerSELongitude)
         )
-        editorOverlayManagerState.overlayManager.add(editorOverlay)
+        if (!editorOverlayManagerState.overlayManager.contains(editorOverlay)) {
+            editorOverlayManagerState.overlayManager.add(editorOverlay)
+        }
     } else {
         // Display loading indicator or placeholder
     }
@@ -255,8 +257,7 @@ fun LocationEditorScreen(
                                     destinationRadius = 0.0F
                                     editorOverlayManagerState.overlayManager.remove(editorOverlay)
                                 } else {
-                                    destinationRadius =
-                                        if (mapBase != null) destinationRadius else 50.0F
+                                    destinationRadius = 50.0F
 
                                     editorOverlay.transparency = 0.9f
                                     editorOverlay.image = context.getDrawable(R.drawable.circles)
@@ -298,7 +299,7 @@ fun LocationEditorScreen(
                     )
                     Text("Destination Radius: ${destinationRadius.toInt()}")
 
-                    Button(enabled = !isNameError,
+                    Button(enabled = !isNameError && name.length >= 3,
                         onClick = {
                             val newBorderPoints = calculateDestinationPoints(
                                 GeoPoint(
