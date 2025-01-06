@@ -138,9 +138,15 @@ fun LocationListScreen(
                                                     shape = CircleShape
                                                 ) // Holo red dark
                                         )
-                                        Text(text = "$formattedValue km",
-                                            modifier = Modifier.padding(start = 8.dp),
-                                            fontSize = 20.sp)
+                                        if (destinationValue == 0.0) {
+                                            Text(text = "No radius",
+                                                modifier = Modifier.padding(start = 8.dp),
+                                                fontSize = 20.sp)
+                                        } else {
+                                            Text(text = "$formattedValue km",
+                                                modifier = Modifier.padding(start = 8.dp),
+                                                fontSize = 20.sp)
+                                        }
                                     }
                                 }
                                 Column(
