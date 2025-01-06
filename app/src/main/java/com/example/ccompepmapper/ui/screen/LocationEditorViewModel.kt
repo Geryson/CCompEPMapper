@@ -41,4 +41,26 @@ class LocationEditorViewModel @Inject constructor(
     fun isNameValid(name: String): Boolean {
         return name.length >= 3
     }
+
+    fun updateMapBaseAndMapLayer(newMapLayer: MapLayer?, mapBase: MapBase) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (newMapLayer != null) {
+                if (newMapLayer.mapLayerId != 0) {
+                    dbRepository.updateMapLayer(newMapLayer)
+                    dbRepository.updateMapBase(mapBase)
+                } else {
+                    val response = dbRepository.insertMapLayer(newMapLayer)
+                    dbRepository.updateMapBase(mapBase.copy(mapLayerId = response.toInt()))
+                }
+            } else {
+                dbRepository.updateMapBase(mapBase)
+            }
+        }
+    }
+
+    fun deleteMapLayerById(updatedMapLayerId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            dbRepository.deleteMapLayerById(updatedMapLayerId)
+        }
+    }
 }

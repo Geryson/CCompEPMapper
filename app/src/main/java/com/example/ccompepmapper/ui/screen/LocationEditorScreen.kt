@@ -61,7 +61,8 @@ fun LocationEditorScreen(
     onNavigateToLocationList: () -> Unit,
     locationEditorViewModel: LocationEditorViewModel = hiltViewModel(),
     @ActivityContext context: Context = LocalContext.current,
-    mapBaseId: Int) {
+    mapBaseId: Int
+) {
     val initialGeoPoint by remember { mutableStateOf(GeoPoint(47.0, 19.0)) }
     var initialZoomLevel by remember { mutableFloatStateOf(5f) }
 
@@ -70,9 +71,10 @@ fun LocationEditorScreen(
     var layerSELatitude by remember { mutableDoubleStateOf(0.0) }
     var layerSELongitude by remember { mutableDoubleStateOf(0.0) }
 
-    val mapBase: MapBase? by locationEditorViewModel.getMapBase(mapBaseId).collectAsState(initial = null)
-    val mapLayer: MapLayer? by locationEditorViewModel.getMapLayerById(mapBaseId).collectAsState(initial = null)
-
+    val mapBase: MapBase? by locationEditorViewModel.getMapBase(mapBaseId)
+        .collectAsState(initial = null)
+    val mapLayer: MapLayer? by locationEditorViewModel.getMapLayerById(mapBaseId)
+        .collectAsState(initial = null)
 
 
     var name by remember { mutableStateOf("") }
@@ -145,16 +147,22 @@ fun LocationEditorScreen(
         // Display loading indicator or placeholder
     }
 
-//    if (mapLayer != null) {
-//        editorOverlay.transparency = 0.9f
-//        editorOverlay.image = context.getDrawable(R.drawable.circles)?.toBitmap(1000, 1000, null)
-//        editorOverlay.setPosition(
-//            GeoPoint(mapLayer!!.upperLeftLatitude, mapLayer!!.upperLeftLongitude),
-//            GeoPoint(mapLayer!!.lowerRightLatitude, mapLayer!!.lowerRightLongitude))
-//        editorOverlayManagerState.overlayManager.add(editorOverlay)
-//    } else {
-//        // Display loading indicator or placeholder
-//    }
+    if (mapLayer != null) {
+        layerNWLatitude = mapLayer!!.upperLeftLatitude
+        layerNWLongitude = mapLayer!!.upperLeftLongitude
+        layerSELatitude = mapLayer!!.lowerRightLatitude
+        layerSELongitude = mapLayer!!.lowerRightLongitude
+
+        editorOverlay.transparency = 0.9f
+        editorOverlay.image = context.getDrawable(R.drawable.circles)?.toBitmap(1000, 1000, null)
+        editorOverlay.setPosition(
+            GeoPoint(layerNWLatitude, layerNWLongitude),
+            GeoPoint(layerSELatitude, layerSELongitude)
+        )
+        editorOverlayManagerState.overlayManager.add(editorOverlay)
+    } else {
+        // Display loading indicator or placeholder
+    }
 
     Scaffold(
         topBar = {
@@ -180,7 +188,13 @@ fun LocationEditorScreen(
                 onMapClick = {
                     editorMarkerState.geoPoint = it
                     editorCameraState.geoPoint = it
-                    changeVisibleRadius(editorCameraState, GeoPoint(layerNWLatitude, layerNWLongitude), GeoPoint(layerSELatitude, layerSELongitude), editorOverlay, destinationRadius.toDouble())
+                    changeVisibleRadius(
+                        editorCameraState,
+                        GeoPoint(layerNWLatitude, layerNWLongitude),
+                        GeoPoint(layerSELatitude, layerSELongitude),
+                        editorOverlay,
+                        destinationRadius.toDouble()
+                    )
                 }
             ) {
                 Marker(
@@ -223,7 +237,7 @@ fun LocationEditorScreen(
                             zoomLevel = it
                             initialZoomLevel = it
                             editorCameraState.zoom = zoomLevel.toDouble()
-                                        },
+                        },
                         valueRange = 5f..18f,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -244,8 +258,15 @@ fun LocationEditorScreen(
                                         if (mapBase != null) destinationRadius else 50.0F
 
                                     editorOverlay.transparency = 0.9f
-                                    editorOverlay.image = context.getDrawable(R.drawable.circles)?.toBitmap(1000, 1000, null)
-                                    changeVisibleRadius(editorCameraState, GeoPoint(layerNWLatitude, layerNWLongitude), GeoPoint(layerSELatitude, layerSELongitude), editorOverlay, destinationRadius.toDouble())
+                                    editorOverlay.image = context.getDrawable(R.drawable.circles)
+                                        ?.toBitmap(1000, 1000, null)
+                                    changeVisibleRadius(
+                                        editorCameraState,
+                                        GeoPoint(layerNWLatitude, layerNWLongitude),
+                                        GeoPoint(layerSELatitude, layerSELongitude),
+                                        editorOverlay,
+                                        destinationRadius.toDouble()
+                                    )
                                     editorOverlayManagerState.overlayManager.add(editorOverlay)
                                 }
                             }
@@ -261,7 +282,13 @@ fun LocationEditorScreen(
                             destinationRadius = it
 
                             if (destinationRadius > 0) {
-                                changeVisibleRadius(editorCameraState, GeoPoint(layerNWLatitude, layerNWLongitude), GeoPoint(layerSELatitude, layerSELongitude), editorOverlay, destinationRadius.toDouble())
+                                changeVisibleRadius(
+                                    editorCameraState,
+                                    GeoPoint(layerNWLatitude, layerNWLongitude),
+                                    GeoPoint(layerSELatitude, layerSELongitude),
+                                    editorOverlay,
+                                    destinationRadius.toDouble()
+                                )
                             }
                         },
                         valueRange = 0f..100f,
@@ -272,31 +299,67 @@ fun LocationEditorScreen(
 
                     Button(enabled = !isNameError,
                         onClick = {
-                        val newBorderPoints = calculateDestinationPoints(
-                            GeoPoint(
-                                editorCameraState.geoPoint.latitude,
-                                editorCameraState.geoPoint.longitude
-                            ), 50.0
-                        )
-                        locationEditorViewModel.addNewMapBaseAndMapLayer(
-                            MapLayer(
-                                upperLeftLatitude = newBorderPoints.first.latitude,
-                                upperLeftLongitude = newBorderPoints.first.longitude,
-                                lowerRightLatitude = newBorderPoints.second.latitude,
-                                lowerRightLongitude = newBorderPoints.second.longitude
-                            ),
-//                    null,
-                            MapBase(
-                                mapLayerId = null,
-                                name = "EP",
-                                latitude = editorCameraState.geoPoint.latitude,
-                                longitude = editorCameraState.geoPoint.longitude,
-                                zoomLevel = editorCameraState.zoom,
-                                destinationRadius = 50.0
+                            val newBorderPoints = calculateDestinationPoints(
+                                GeoPoint(
+                                    editorCameraState.geoPoint.latitude,
+                                    editorCameraState.geoPoint.longitude
+                                ), destinationRadius.toDouble()
                             )
-                        )
-                    }) {
-                        Text(text = "Save MapBase")
+                            var newMapLayer: MapLayer? = null
+                            if (createMapLayer) {
+                                if (mapLayer != null && mapLayer!!.mapLayerId != -1) {
+                                    newMapLayer = MapLayer(
+                                        mapLayerId = mapLayer!!.mapLayerId,
+                                        upperLeftLatitude = newBorderPoints.first.latitude,
+                                        upperLeftLongitude = newBorderPoints.first.longitude,
+                                        lowerRightLatitude = newBorderPoints.second.latitude,
+                                        lowerRightLongitude = newBorderPoints.second.longitude
+                                    )
+                                } else {
+                                    newMapLayer = MapLayer(
+                                        upperLeftLatitude = newBorderPoints.first.latitude,
+                                        upperLeftLongitude = newBorderPoints.first.longitude,
+                                        lowerRightLatitude = newBorderPoints.second.latitude,
+                                        lowerRightLongitude = newBorderPoints.second.longitude
+                                    )
+                                }
+                            }
+                            var updatedMapLayerId = mapLayer?.mapLayerId
+                            if (newMapLayer == null && updatedMapLayerId != null) {
+                                locationEditorViewModel.deleteMapLayerById(updatedMapLayerId)
+                                updatedMapLayerId = null
+                            }
+
+                            if (mapBaseId != -1) {
+                                locationEditorViewModel.updateMapBaseAndMapLayer(
+                                    newMapLayer,
+                                    MapBase(
+                                        mapBaseId = mapBaseId,
+                                        mapLayerId = updatedMapLayerId,
+                                        name = name,
+                                        latitude = editorCameraState.geoPoint.latitude,
+                                        longitude = editorCameraState.geoPoint.longitude,
+                                        zoomLevel = zoomLevel.toDouble(),
+                                        destinationRadius = destinationRadius.toDouble()
+                                    )
+                                )
+                            } else {
+                                locationEditorViewModel.addNewMapBaseAndMapLayer(
+                                    newMapLayer,
+//                    null,
+                                    MapBase(
+                                        mapLayerId = updatedMapLayerId,
+                                        name = name,
+                                        latitude = editorCameraState.geoPoint.latitude,
+                                        longitude = editorCameraState.geoPoint.longitude,
+                                        zoomLevel = zoomLevel.toDouble(),
+                                        destinationRadius = destinationRadius.toDouble()
+                                    )
+                                )
+                            }
+                            onNavigateToLocationList()
+                        }) {
+                        Text(text = "Save map")
                     }
                     Button(onClick = {
                         onNavigateToLocationList()
@@ -309,7 +372,13 @@ fun LocationEditorScreen(
     }
 }
 
-fun changeVisibleRadius(cameraState: CameraState, nwPoint: GeoPoint, sePoint: GeoPoint, overlay: GroundOverlay, destinationRadius: Double) {
+fun changeVisibleRadius(
+    cameraState: CameraState,
+    nwPoint: GeoPoint,
+    sePoint: GeoPoint,
+    overlay: GroundOverlay,
+    destinationRadius: Double
+) {
     val newBorderPoints = calculateDestinationPoints(
         GeoPoint(
             cameraState.geoPoint.latitude,

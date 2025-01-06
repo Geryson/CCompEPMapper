@@ -38,4 +38,16 @@ class EPMapperDBRepository @Inject constructor(
     suspend fun deleteMapLayer(mapLayerId: Int) {
         mapLayerDao.deleteMapLayerById(mapLayerId)
     }
+
+    suspend fun updateMapLayer(newMapLayer: MapLayer) {
+        mapLayerDao.updateMapLayer(newMapLayer)
+    }
+
+    suspend fun updateMapBase(mapBase: MapBase) {
+        mapBaseDao.updateMapBase(mapBase)
+    }
+
+    suspend fun deleteMapLayerById(mapLayerId: Int) {
+        mapLayerDao.deleteMapLayerById(mapLayerId)
+    }
 }
